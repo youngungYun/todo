@@ -26,7 +26,4 @@ public class Todo {
 
     @NotNull
     private LocalDateTime deadline;
-
-    @NotNull
-    private LocalDateTime modifiedTime;
 }
