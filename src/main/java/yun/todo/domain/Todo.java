@@ -19,7 +19,7 @@ public class Todo {
 
     @Id
     @GeneratedValue
-    private int id;
+    private Long id;
 
     @NotBlank
     private String content;
