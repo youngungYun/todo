@@ -22,7 +22,7 @@ public class Todo {
     private Long id;
 
     @NotBlank
-    private String content;
+    private String description;
 
     @NotNull
     private LocalDateTime deadline;

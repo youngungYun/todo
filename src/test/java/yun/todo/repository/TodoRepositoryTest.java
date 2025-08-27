@@ -49,7 +49,7 @@ class TodoRepositoryTest {
         assertThat(savedEntity.getId()).isNotNull().isPositive();
         assertThat(savedEntity.getId()).isEqualTo(entity.getId());
 
-        assertThat(savedEntity.getContent()).isEqualTo(entity.getContent());
+        assertThat(savedEntity.getDescription()).isEqualTo(entity.getDescription());
 
         assertThat(savedEntity.getDeadline()).isEqualTo(entity.getDeadline());
     }
@@ -69,7 +69,7 @@ class TodoRepositoryTest {
     }
 
     private Todo createEntity() {
-        String content = "It's Test Content.";
+        String description = "It's Test Todo.";
         int year = 2025;
         int month = 12;
         int dayOfMonth = 25;
@@ -78,7 +78,7 @@ class TodoRepositoryTest {
         int second = 51;
         LocalDateTime deadline = LocalDateTime.of(year, month, dayOfMonth, hour, minute, second);
 
-        Todo entity = Todo.builder().content(content).deadline(deadline).build();
+        Todo entity = Todo.builder().description(description).deadline(deadline).build();
 
         return entity;
     }
