@@ -55,17 +55,17 @@ class TodoRepositoryTest {
     }
 
     @Test
-    void delete() {
+    void deleteById() {
         // given
         Todo entity = createEntity();
         Todo savedEntity = repository.save(entity);
+        Long id = savedEntity.getId();
 
         // when
-        repository.delete(savedEntity);
-        Long entityId = savedEntity.getId();
+        repository.deleteById(id);
 
         // then
-        assertThat(repository.findById(entityId)).isEmpty();
+        assertThat(repository.findById(id)).isEmpty();
     }
 
     private Todo createEntity() {

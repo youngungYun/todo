@@ -1,16 +1,19 @@
 package yun.todo.service;
 
-import yun.todo.dto.TodoRequest;
+import yun.todo.dto.TodoCreateRequest;
+import yun.todo.dto.TodoDeleteRequest;
+import yun.todo.dto.TodoResponse;
+import yun.todo.dto.TodoUpdateReqeust;
 
 import java.util.List;
 
 public interface TodoService {
 
-    List<TodoResponse> readAllTodos();
+    List<TodoResponse> readAll();
 
-    TodoResponse createTodo(TodoRequest request);
+    TodoResponse create(TodoCreateRequest request);
 
-    TodoResponse updateTodo(TodoRequest request);
+    TodoResponse update(TodoUpdateReqeust request);
 
-    void deleteTodo(TodoRequest request);
+    void delete(TodoDeleteRequest request);
 }

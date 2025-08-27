@@ -4,11 +4,11 @@ import yun.todo.domain.Todo;
 
 import java.time.LocalDateTime;
 
-public record TodoRequest(
+public record TodoCreateRequest(
         String description,
         LocalDateTime deadline){
 
-    Todo toEntity() {
+    public Todo toEntity() {
         Todo todo = Todo.builder().description(description).deadline(deadline).build();
 
         return todo;

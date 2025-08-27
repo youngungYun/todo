@@ -1,5 +1,6 @@
 package yun.todo.repository;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.lang.NonNull;
 import yun.todo.domain.Todo;
@@ -18,5 +19,5 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     <S extends Todo> S save(@NonNull S entity);
 
     @Override
-    void delete(@NonNull Todo entity);
+    void deleteById(@NonNull Long id) throws EmptyResultDataAccessException;
 }
