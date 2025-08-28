@@ -1,5 +1,6 @@
 package yun.todo.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class TodoController {
     }
 
     @PostMapping(produces = {"application/json"})
-    public ResponseEntity<TodoResponse> createTodo(TodoCreateRequest request) {
+    public ResponseEntity<TodoResponse> createTodo(@RequestBody @Valid TodoCreateRequest request) {
         var createdTodo = todoService.createTodo(request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -39,7 +40,7 @@ public class TodoController {
     }
 
     @PutMapping(produces = {"application/json"})
-    public ResponseEntity<TodoResponse> updateTodo(TodoUpdateRequest request) {
+    public ResponseEntity<TodoResponse> updateTodo(@RequestBody @Valid TodoUpdateRequest request) {
         var updatedTodo = todoService.updateTodo(request);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT)

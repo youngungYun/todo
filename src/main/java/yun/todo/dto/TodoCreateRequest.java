@@ -7,8 +7,8 @@ import yun.todo.domain.Todo;
 import java.time.LocalDateTime;
 
 public record TodoCreateRequest(
-        @NotBlank String description,
-        @NotNull LocalDateTime deadline){
+        @NotBlank(message = "{todo.description.notblank}") String description,
+        @NotNull(message = "{todo.deadline.notnull}") LocalDateTime deadline){
 
     public Todo toEntity() {
         Todo todo = Todo.builder().description(description).deadline(deadline).build();

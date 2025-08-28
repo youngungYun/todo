@@ -7,9 +7,9 @@ import yun.todo.domain.Todo;
 import java.time.LocalDateTime;
 
 public record TodoUpdateRequest(
-        @NotNull Long id,
-        @NotBlank String description,
-        @NotNull LocalDateTime deadline
+        @NotNull(message = "{todo.id.notnull}") Long id,
+        @NotBlank(message = "{todo.description.notblank}") String description,
+        @NotNull(message = "{todo.deadline.notnull}") LocalDateTime deadline
 ) {
 
     public Todo toEntity() {

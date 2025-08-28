@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import yun.todo.dto.TodoCreateRequest;
 import yun.todo.dto.TodoResponse;
 import yun.todo.dto.TodoUpdateRequest;
+import yun.todo.exception.ErrorCode;
 import yun.todo.exception.NoSuchTodoException;
 import yun.todo.service.TodoService;
 
@@ -25,6 +27,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(TodoController.class)
 class TodoControllerTest {
+
+    String idMessage = "id가 없습니다.";
+    String descriptionMessage = "설명을 입력하세요.";
+    String deadlineMessage = "시간을 입력하세요.";
+
+    @Autowired
+    private MessageSource messageSource;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -90,6 +99,30 @@ class TodoControllerTest {
     }
 
     @Test
+    void createTodo_validFailure() throws Exception {
+        // given
+        Long id = 1L;
+        // description이 " "
+        String description = " ";
+        // deadline이 null
+        LocalDateTime deadline = null;
+
+
+        TodoCreateRequest request = new TodoCreateRequest(description, deadline);
+        TodoResponse response = new TodoResponse(id, description, deadline);
+
+        when(todoService.createTodo(any(TodoCreateRequest.class))).thenReturn(response);
+
+        // when, then
+        mockMvc.perform(post("/todo")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.description").value(descriptionMessage))
+                .andExpect(jsonPath("$.deadline").value(deadlineMessage));
+    }
+
+    @Test
     void updateTodo() throws Exception {
 
         // given
@@ -113,7 +146,34 @@ class TodoControllerTest {
     }
 
     @Test
-    void deleteTodo_Success() throws Exception {
+    void updateTodo_validFailure() throws Exception {
+
+        // given
+        // id가 null
+        Long id = null;
+        // description이 " "
+        String description = " ";
+        // deadline이 null
+        LocalDateTime deadline = null;
+
+        TodoUpdateRequest request = new TodoUpdateRequest(id, description, deadline);
+        TodoResponse response = new TodoResponse(id, description, deadline);
+
+        when(todoService.updateTodo(any(TodoUpdateRequest.class))).thenReturn(response);
+
+        // when, then
+        mockMvc.perform(put("/todo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.id").value(idMessage))
+                .andExpect(jsonPath("$.description").value(descriptionMessage))
+                .andExpect(jsonPath("$.deadline").value(deadlineMessage));
+
+    }
+
+    @Test
+    void deleteTodo_success() throws Exception {
 
         // given
         Long id = 1L;
@@ -124,7 +184,7 @@ class TodoControllerTest {
     }
 
     @Test
-    void deleteTodo_Failure() throws Exception {
+    void deleteTodo_failure() throws Exception {
 
         // given
         Long id = 1L;
@@ -134,7 +194,8 @@ class TodoControllerTest {
 
         // when, then
         mockMvc.perform(delete("/todo/{id}", id))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(ErrorCode.NO_SUCH_TODO.getDescription()));
     }
 
     private LocalDateTime createDeadline() {
