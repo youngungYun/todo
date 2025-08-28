@@ -6,13 +6,15 @@ import yun.todo.domain.Todo;
 
 import java.time.LocalDateTime;
 
-public record TodoCreateRequest(
+public record TodoUpdateRequest(
+        @NotNull Long id,
         @NotBlank String description,
-        @NotNull LocalDateTime deadline){
+        @NotNull LocalDateTime deadline
+) {
 
     public Todo toEntity() {
-        Todo todo = Todo.builder().description(description).deadline(deadline).build();
 
-        return todo;
+        return Todo.builder().id(id).description(description).deadline(deadline).build();
     }
 }
+

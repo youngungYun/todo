@@ -1,13 +1,16 @@
 package yun.todo.service.impl;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.EmptyResultDataAccessException;
 import yun.todo.domain.Todo;
 import yun.todo.dto.TodoCreateRequest;
-import yun.todo.dto.TodoDeleteRequest;
 import yun.todo.dto.TodoResponse;
-import yun.todo.dto.TodoUpdateReqeust;
+import yun.todo.dto.TodoUpdateRequest;
+import yun.todo.exception.NoSuchTodoException;
 import yun.todo.repository.TodoRepository;
 
 import java.time.LocalDateTime;
@@ -16,20 +19,17 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
 
-
+@ExtendWith(MockitoExtension.class)
 class TodoServiceImplTest {
 
+    @Mock
     private TodoRepository todoRepository;
+
+    @InjectMocks
     private TodoServiceImpl todoService;
 
-    @BeforeEach
-    void setUp() {
-        todoRepository = mock(TodoRepository.class);
-        todoService = new TodoServiceImpl(todoRepository);
-    }
-
     @Test
-    void readAll() {
+    void getTodos() {
         // given
         String description1 = "desctription1";
         String description2 = "desctription2";
@@ -40,7 +40,7 @@ class TodoServiceImplTest {
         when(todoRepository.findAll()).thenReturn(List.of(todo1, todo2));
 
         // when
-        List<TodoResponse> result = todoService.readAll();
+        List<TodoResponse> result = todoService.getTodos();
 
         // then
         assertThat(result)
@@ -51,10 +51,10 @@ class TodoServiceImplTest {
 
 
     @Test
-    void create() {
+    void createTodo() {
         // given
         String description = "description";
-        LocalDateTime deadline = createDeadline();
+        LocalDateTime deadline = createTodoDeadline();
 
         TodoCreateRequest request = new TodoCreateRequest(description, deadline);
         Todo todo = request.toEntity();
@@ -62,7 +62,7 @@ class TodoServiceImplTest {
         when(todoRepository.save(any(Todo.class))).thenReturn(todo);
 
         // when
-        TodoResponse result = todoService.create(request);
+        TodoResponse result = todoService.createTodo(request);
 
         // then
         assertThat(result)
@@ -71,19 +71,19 @@ class TodoServiceImplTest {
     }
 
     @Test
-    void update() {
+    void updateTodo() {
         // given
         Long id = 1L;
         String description = "description";
-        LocalDateTime deadline = createDeadline();
+        LocalDateTime deadline = createTodoDeadline();
 
-        TodoUpdateReqeust request = new TodoUpdateReqeust(id, description, deadline);
+        TodoUpdateRequest request = new TodoUpdateRequest(id, description, deadline);
         Todo todo = request.toEntity();
 
         when(todoRepository.save(any(Todo.class))).thenReturn(todo);
 
         // when
-        TodoResponse result = todoService.update(request);
+        TodoResponse result = todoService.updateTodo(request);
 
         // then
         assertThat(result)
@@ -92,38 +92,34 @@ class TodoServiceImplTest {
     }
 
     @Test
-    void deleteSuccess() {
+    void deleteTodo_Success() {
         // given
         Long id = 1L;
 
-        TodoDeleteRequest request = new TodoDeleteRequest(id);
-
         // when
-        todoService.delete(request);
+        todoService.deleteTodo(id);
 
         // then
         verify(todoRepository, times(1)).deleteById(id);
     }
 
     @Test
-    void deleteFailure() {
+    void deleteTodo_Failure() {
         // given
         Long id = 1L;
-
-        TodoDeleteRequest request = new TodoDeleteRequest(id);
 
         doThrow(new EmptyResultDataAccessException(1))
                 .when(todoRepository).deleteById(id);
 
         // when, then
-        assertThatThrownBy(() -> todoService.delete(request))
-                .isInstanceOf(EmptyResultDataAccessException.class);
+        assertThatThrownBy(() -> todoService.deleteTodo(id))
+                .isInstanceOf(NoSuchTodoException.class);
 
         verify(todoRepository, times(1)).deleteById(id);
     }
 
 
-    private LocalDateTime createDeadline() {
+    private LocalDateTime createTodoDeadline() {
         return LocalDateTime.of(2025, 8, 27, 23, 58, 30);
     }
 }

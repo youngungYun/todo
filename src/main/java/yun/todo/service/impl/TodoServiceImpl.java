@@ -1,12 +1,13 @@
 package yun.todo.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import yun.todo.domain.Todo;
 import yun.todo.dto.TodoCreateRequest;
-import yun.todo.dto.TodoDeleteRequest;
 import yun.todo.dto.TodoResponse;
-import yun.todo.dto.TodoUpdateReqeust;
+import yun.todo.dto.TodoUpdateRequest;
+import yun.todo.exception.NoSuchTodoException;
 import yun.todo.repository.TodoRepository;
 import yun.todo.service.TodoService;
 
@@ -23,7 +24,7 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
-    public List<TodoResponse> readAll() {
+    public List<TodoResponse> getTodos() {
 
         return repository.findAll().stream().map(todo -> {
             return new TodoResponse(todo.getId(), todo.getDescription(), todo.getDeadline());
@@ -32,14 +33,13 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
-    public TodoResponse create(TodoCreateRequest request) {
+    public TodoResponse createTodo(TodoCreateRequest request) {
         Todo savedTodo = repository.save(request.toEntity());
 
         return new TodoResponse(savedTodo.getId(), savedTodo.getDescription(), savedTodo.getDeadline());
     }
 
-    @Override
-    public TodoResponse update(TodoUpdateReqeust request) {
+    public TodoResponse updateTodo(TodoUpdateRequest request) {
         Todo UpdatedTodo = repository.save(request.toEntity());
 
         return new TodoResponse(UpdatedTodo.getId(), UpdatedTodo.getDescription(), UpdatedTodo.getDeadline());
@@ -47,9 +47,12 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
-    public void delete(TodoDeleteRequest request) {
-        Long id = request.id();
-
-        repository.deleteById(id);
+    public void deleteTodo(Long id) throws NoSuchTodoException {
+        try {
+            repository.deleteById(id);
+        }
+        catch (EmptyResultDataAccessException exception) {
+            throw new NoSuchTodoException();
+        }
     }
 }

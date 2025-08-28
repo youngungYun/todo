@@ -1,5 +1,7 @@
 package yun.todo.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 public record TodoDeleteRequest(
-        Long id
+        @NotNull Long id
 ) { }

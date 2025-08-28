@@ -1,19 +1,19 @@
 package yun.todo.service;
 
 import yun.todo.dto.TodoCreateRequest;
-import yun.todo.dto.TodoDeleteRequest;
 import yun.todo.dto.TodoResponse;
-import yun.todo.dto.TodoUpdateReqeust;
+import yun.todo.dto.TodoUpdateRequest;
+import yun.todo.exception.NoSuchTodoException;
 
 import java.util.List;
 
 public interface TodoService {
 
-    List<TodoResponse> readAll();
+    List<TodoResponse> getTodos();
 
-    TodoResponse create(TodoCreateRequest request);
+    TodoResponse createTodo(TodoCreateRequest request);
 
-    TodoResponse update(TodoUpdateReqeust request);
+    TodoResponse updateTodo(TodoUpdateRequest request);
 
-    void delete(TodoDeleteRequest request);
+    void deleteTodo(Long id) throws NoSuchTodoException;
 }
