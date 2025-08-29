@@ -1,40 +1,35 @@
-package yun.todo.controller;
+package yun.todo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.MessageSource;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import yun.todo.controller.TodoController;
+import yun.todo.domain.Todo;
 import yun.todo.dto.TodoCreateRequest;
-import yun.todo.dto.TodoCreateResponse;
-import yun.todo.dto.TodoResponse;
 import yun.todo.dto.TodoUpdateRequest;
-import yun.todo.exception.ErrorCode;
-import yun.todo.exception.NoSuchTodoException;
+import yun.todo.repository.TodoRepository;
 import yun.todo.service.TodoService;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-@WebMvcTest(TodoController.class)
-class TodoControllerTest {
+@Transactional
+@AutoConfigureMockMvc
+@SpringBootTest
+public class TodoIntegrationTest {
 
     String idMessage = "id가 없습니다.";
     String descriptionMessage = "설명을 입력하세요.";
     String deadlineMessage = "시간을 입력하세요.";
-
-    @Autowired
-    private MessageSource messageSource;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -42,26 +37,27 @@ class TodoControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
-    private TodoService todoService;
+    @Autowired
+    private TodoController controller;
+
+    @Autowired
+    private TodoService service;
+
+    @Autowired
+    private TodoRepository repository;
 
     @Test
-    @DisplayName("GET /todo")
+    @DisplayName("저장된 모든 Todo 가져옴")
     void getTodos() throws Exception {
         // given
-        Long id1 = 1L;
         String description1 = "description1";
         LocalDateTime deadline1 = createDeadline();
 
-        Long id2 = 2L;
         String description2 = "description2";
         LocalDateTime deadline2 = createDeadline();
 
-        TodoResponse response1 = new TodoResponse(id1, description1, deadline1);
-        TodoResponse response2 = new TodoResponse(id2, description2, deadline2);
-        List<TodoResponse> responseList = List.of(response1, response2);
-
-        when(todoService.getTodos()).thenReturn(responseList);
+        Long id1 = saveTodo(description1, deadline1);
+        Long id2 = saveTodo(description2, deadline2);
 
         // when, then
         mockMvc.perform(get("/todo"))
@@ -79,47 +75,36 @@ class TodoControllerTest {
     }
 
     @Test
-    @DisplayName("POST /todo")
-    void createTodo() throws Exception {
+    @DisplayName("Todo 생성 성공")
+    void createTodo_Success() throws Exception {
         // given
-        Long id = 1L;
         String description = "description";
         LocalDateTime deadline = createDeadline();
 
         TodoCreateRequest request = new TodoCreateRequest(description, deadline);
-        TodoCreateResponse response = new TodoCreateResponse(id);
-
-        when(todoService.createTodo(any(TodoCreateRequest.class))).thenReturn(response);
 
         // when, then
         mockMvc.perform(post("/todo")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(id));
+                .andExpect(jsonPath("$.id").isNotEmpty());
     }
 
     @Test
-    @DisplayName("POST /todo 유효성 검증 실패")
+    @DisplayName("Todo 생성 요청 유효성 검증 실패")
     void createTodo_ValidFailure() throws Exception {
         // given
-        Long id = 1L;
-        // description이 " "
         String description = " ";
-        // deadline이 null
         LocalDateTime deadline = null;
 
-
         TodoCreateRequest request = new TodoCreateRequest(description, deadline);
-        TodoCreateResponse response = new TodoCreateResponse(id);
-
-        when(todoService.createTodo(any(TodoCreateRequest.class))).thenReturn(response);
 
         // when, then
         mockMvc.perform(post("/todo")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 
@@ -128,11 +113,11 @@ class TodoControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /todo")
-    void updateTodo() throws Exception {
+    @DisplayName("Todo 수정 성공")
+    void updateTodo_Success() throws Exception {
         // given
-        Long id = 1L;
-        String description = "description";
+        Long id = saveTodo("description", createDeadline());
+        String description = "updated description";
         LocalDateTime deadline = createDeadline();
 
         TodoUpdateRequest request = new TodoUpdateRequest(id, description, deadline);
@@ -142,18 +127,16 @@ class TodoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNoContent());
+
     }
 
     @Test
-    @DisplayName("PUT /todo 유효성 검증 실패")
+    @DisplayName("Todo 수정 요청 유효성 검증 실패")
     void updateTodo_ValidFailure() throws Exception {
-
         // given
-        // id가 null
+        saveTodo("description", createDeadline());
         Long id = null;
-        // description이 " "
         String description = " ";
-        // deadline이 null
         LocalDateTime deadline = null;
 
         TodoUpdateRequest request = new TodoUpdateRequest(id, description, deadline);
@@ -168,40 +151,40 @@ class TodoControllerTest {
                 .andExpect(jsonPath("$.id").value(idMessage))
                 .andExpect(jsonPath("$.description").value(descriptionMessage))
                 .andExpect(jsonPath("$.deadline").value(deadlineMessage));
-
     }
 
     @Test
-    @DisplayName("DELETE /todo/{id}")
+    @DisplayName("Todo 삭제 성공")
     void deleteTodo_Success() throws Exception {
-
         // given
-        Long id = 1L;
+        String description = "description";
+        LocalDateTime deadline = createDeadline();
+        Long id = saveTodo(description, deadline);
 
         // when, then
         mockMvc.perform(delete("/todo/{id}", id))
                 .andExpect(status().isNoContent());
-
     }
 
     @Test
-    @DisplayName("DELETE /todo/{id} 존재하지 않는 id라 예외 발생")
+    @DisplayName("존재하지 않는 id로 인해 삭제 실패")
     void deleteTodo_Failure() throws Exception {
-
         // given
-        Long id = 1L;
-
-        doThrow(new NoSuchTodoException())
-                .when(todoService).deleteTodo(id);
+        Long id = 9999L;
 
         // when, then
         mockMvc.perform(delete("/todo/{id}", id))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(ErrorCode.NO_SUCH_TODO.getDescription()));
+                .andExpect(status().isNotFound());
+
+    }
+
+    private Long saveTodo(String description, LocalDateTime deadline) {
+        Todo savedTodo = repository.save(Todo.builder().description(description).deadline(deadline).build());
+
+        return savedTodo.getId();
     }
 
     private LocalDateTime createDeadline() {
-        return LocalDateTime.of(2025, 12, 25, 6, 30, 10);
+        return LocalDateTime.of(2025, 12, 25, 20, 30, 10);
     }
 }

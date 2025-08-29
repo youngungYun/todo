@@ -2,9 +2,11 @@ package yun.todo.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import yun.todo.domain.Todo;
 import yun.todo.dto.TodoCreateRequest;
+import yun.todo.dto.TodoCreateResponse;
 import yun.todo.dto.TodoResponse;
 import yun.todo.dto.TodoUpdateRequest;
 import yun.todo.exception.NoSuchTodoException;
@@ -33,26 +35,21 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
-    public TodoResponse createTodo(TodoCreateRequest request) {
+    public TodoCreateResponse createTodo(TodoCreateRequest request) {
         Todo savedTodo = repository.save(request.toEntity());
 
-        return new TodoResponse(savedTodo.getId(), savedTodo.getDescription(), savedTodo.getDeadline());
+        return new TodoCreateResponse(savedTodo.getId());
     }
 
-    public TodoResponse updateTodo(TodoUpdateRequest request) {
-        Todo UpdatedTodo = repository.save(request.toEntity());
-
-        return new TodoResponse(UpdatedTodo.getId(), UpdatedTodo.getDescription(), UpdatedTodo.getDeadline());
-
+    public void updateTodo(TodoUpdateRequest request) {
+        repository.save(request.toEntity());
     }
 
     @Override
-    public void deleteTodo(Long id) throws NoSuchTodoException {
-        try {
-            repository.deleteById(id);
-        }
-        catch (EmptyResultDataAccessException exception) {
-            throw new NoSuchTodoException();
-        }
+    public void deleteTodo(@NonNull Long id) throws NoSuchTodoException {
+        Todo todo = repository.findById(id)
+                .orElseThrow(NoSuchTodoException::new);
+
+        repository.delete(todo);
     }
 }

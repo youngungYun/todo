@@ -1,5 +1,6 @@
 package yun.todo.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class TodoExceptionAdvice {
 
@@ -32,11 +34,15 @@ public class TodoExceptionAdvice {
         return Map.of("message", exception.getMessage());
     }
 
+    // validation 예외 처리
     private Map<String, Object> exceptionToMap(MethodArgumentNotValidException exception) {
-        return exception.getBindingResult().getFieldErrors().stream()
+        Map<String, Object> errors = exception.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(
                         FieldError::getField,
                         FieldError::getDefaultMessage
                 ));
+        log.warn("[Validation Failed] Errors: {}", errors.toString());
+
+        return errors;
     }
 }

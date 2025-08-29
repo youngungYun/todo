@@ -1,5 +1,6 @@
 package yun.todo.service.impl;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 import yun.todo.domain.Todo;
 import yun.todo.dto.TodoCreateRequest;
+import yun.todo.dto.TodoCreateResponse;
 import yun.todo.dto.TodoResponse;
 import yun.todo.dto.TodoUpdateRequest;
 import yun.todo.exception.NoSuchTodoException;
@@ -16,6 +18,7 @@ import yun.todo.repository.TodoRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
@@ -30,6 +33,7 @@ class TodoServiceImplTest {
     private TodoServiceImpl todoService;
 
     @Test
+    @DisplayName("모든 Todo 조회")
     void getTodos() {
         // given
         String description1 = "desctription1";
@@ -52,26 +56,30 @@ class TodoServiceImplTest {
 
 
     @Test
+    @DisplayName("Todo 생성")
     void createTodo() {
         // given
+        Long id = 1L;
         String description = "description";
         LocalDateTime deadline = createTodoDeadline();
 
         TodoCreateRequest request = new TodoCreateRequest(description, deadline);
         Todo todo = request.toEntity();
+        todo.setId(id);
 
         when(todoRepository.save(any(Todo.class))).thenReturn(todo);
 
         // when
-        TodoResponse result = todoService.createTodo(request);
+        TodoCreateResponse result = todoService.createTodo(request);
 
         // then
         assertThat(result)
-                .extracting(TodoResponse::description, TodoResponse::deadline)
-                .containsExactly(description, deadline);
+                .extracting(TodoCreateResponse::id)
+                .isEqualTo(id);
     }
 
     @Test
+    @DisplayName("Todo 수정")
     void updateTodo() {
         // given
         Long id = 1L;
@@ -84,39 +92,46 @@ class TodoServiceImplTest {
         when(todoRepository.save(any(Todo.class))).thenReturn(todo);
 
         // when
-        TodoResponse result = todoService.updateTodo(request);
+        todoService.updateTodo(request);
 
         // then
-        assertThat(result)
-                .extracting(TodoResponse::id, TodoResponse::description, TodoResponse::deadline)
-                .containsExactly(id, description, deadline);
+        verify(todoRepository, times(1)).save(any(Todo.class));
     }
 
     @Test
+    @DisplayName("Todo 삭제")
     void deleteTodo_Success() {
         // given
         Long id = 1L;
+        String description = "description";
+        LocalDateTime deadline = createTodoDeadline();
+
+        Todo todo = Todo.builder().id(id).description(description).deadline(deadline).build();
+
+        when(todoRepository.findById(any(Long.class))).thenReturn(Optional.of(todo));
 
         // when
         todoService.deleteTodo(id);
 
         // then
-        verify(todoRepository, times(1)).deleteById(id);
+        verify(todoRepository, times(1)).findById(id);
+        verify(todoRepository, times(1)).delete(todo);
+
     }
 
     @Test
+    @DisplayName("삭제할 id를 가진 Todo 없어 예외발생")
     void deleteTodo_Failure() {
         // given
         Long id = 1L;
 
-        doThrow(new EmptyResultDataAccessException(1))
-                .when(todoRepository).deleteById(id);
+        when(todoRepository.findById(any(Long.class))).thenReturn(Optional.empty());
 
         // when, then
         assertThatThrownBy(() -> todoService.deleteTodo(id))
                 .isInstanceOf(NoSuchTodoException.class);
 
-        verify(todoRepository, times(1)).deleteById(id);
+        verify(todoRepository, times(1)).findById(id);
     }
 
 

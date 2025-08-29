@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import yun.todo.dto.TodoCreateRequest;
+import yun.todo.dto.TodoCreateResponse;
 import yun.todo.dto.TodoResponse;
 import yun.todo.dto.TodoUpdateRequest;
 import yun.todo.service.TodoService;
@@ -32,19 +33,19 @@ public class TodoController {
     }
 
     @PostMapping(produces = {"application/json"})
-    public ResponseEntity<TodoResponse> createTodo(@RequestBody @Valid TodoCreateRequest request) {
-        var createdTodo = todoService.createTodo(request);
+    public ResponseEntity<TodoCreateResponse> createTodo(@RequestBody @Valid TodoCreateRequest request) {
+        TodoCreateResponse response = todoService.createTodo(request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(createdTodo);
+                .body(response);
     }
 
     @PutMapping(produces = {"application/json"})
-    public ResponseEntity<TodoResponse> updateTodo(@RequestBody @Valid TodoUpdateRequest request) {
-        var updatedTodo = todoService.updateTodo(request);
+    public ResponseEntity<Void> updateTodo(@RequestBody @Valid TodoUpdateRequest request) {
+        todoService.updateTodo(request);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                .body(updatedTodo);
+                .body(null);
     }
 
     @DeleteMapping(path = "/{id}", produces = {"application/json"})

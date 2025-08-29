@@ -1,23 +1,19 @@
 package yun.todo.aop;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.Arrays;
-
+@Slf4j
 @Aspect
 @Component
 public class TodoControllerLoggingAspect {
-
-    private static final Logger log = LoggerFactory.getLogger(TodoControllerLoggingAspect.class);
 
     @Around("execution(* yun.todo.controller..*(..))")
     public Object todoControllerLogging(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -31,11 +27,6 @@ public class TodoControllerLoggingAspect {
 
             log.info("Request: {} {} ", httpMethod, requestUrl);
         }
-
-        String methodName = joinPoint.getSignature().toShortString();
-        Object[] args = joinPoint.getArgs();
-
-        log.info("[START] {} args={}", methodName, Arrays.toString(args));
 
         try {
             return joinPoint.proceed();
