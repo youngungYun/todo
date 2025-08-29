@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.5.4"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.asciidoctor.jvm.convert") version "3.3.2"
 }
 
 group = "yun"
@@ -16,6 +17,8 @@ java {
 repositories {
     mavenCentral()
 }
+
+val snippetsDir by extra { file("build/generated-snippets") }
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -32,5 +35,17 @@ dependencies {
 }
 
 tasks.withType<Test> {
+    outputs.dir(snippetsDir)
     useJUnitPlatform()
+}
+
+
+tasks.test {
+    outputs.dir(snippetsDir)
+    useJUnitPlatform()
+}
+
+tasks.asciidoctor {
+    inputs.dir(snippetsDir)
+    dependsOn(tasks.test)
 }

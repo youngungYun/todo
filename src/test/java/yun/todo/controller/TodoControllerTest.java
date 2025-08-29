@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
@@ -23,10 +24,15 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(TodoController.class)
+@AutoConfigureRestDocs(outputDir = "build/generated-snippets")
 class TodoControllerTest {
 
     String idMessage = "id가 없습니다.";
@@ -72,7 +78,15 @@ class TodoControllerTest {
 
                 .andExpect(jsonPath("$[1].id").value(id2))
                 .andExpect(jsonPath("$[1].description").value(description2))
-                .andExpect(jsonPath("$[1].deadline").value(deadline2.toString()));
+                .andExpect(jsonPath("$[1].deadline").value(deadline2.toString()))
+
+                .andDo(document("todo-get",
+                        responseFields(
+                                fieldWithPath("[].id").description("Todo의 ID"),
+                                fieldWithPath("[].description").description("Todo의 내용"),
+                                fieldWithPath("[].deadline").description("Todo의 데드라인")
+                        )
+                ));
     }
 
     @Test
@@ -94,7 +108,16 @@ class TodoControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(id));
+                .andExpect(jsonPath("$.id").value(id))
+
+                .andDo(document("todo-post",
+                        requestFields(
+                                fieldWithPath("description").description("생성할 Todo의 설명"),
+                                fieldWithPath("deadline").description("생성할 Todo의 데드라인")),
+                        responseFields(
+                                fieldWithPath("id").description("생성된 Todo의 ID")
+                        )
+                ));
     }
 
     @Test
@@ -121,7 +144,17 @@ class TodoControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 
                 .andExpect(jsonPath("$.description").value(descriptionMessage))
-                .andExpect(jsonPath("$.deadline").value(deadlineMessage));
+                .andExpect(jsonPath("$.deadline").value(deadlineMessage))
+
+                .andDo(document("todo-post-valid_failure",
+                        requestFields(
+                                fieldWithPath("description").description("생성할 Todo의 설명"),
+                                fieldWithPath("deadline").description("생성할 Todo의 데드라인")),
+                        responseFields(
+                                fieldWithPath("description").description("description의 유효성 메시지"),
+                                fieldWithPath("deadline").description("deadline의 유효성 메시지")
+                        )
+                ));
     }
 
     @Test
@@ -138,7 +171,14 @@ class TodoControllerTest {
         mockMvc.perform(put("/todo")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent())
+
+                .andDo(document("todo-put",
+                        requestFields(
+                                fieldWithPath("id").description("수정할 Todo의 ID"),
+                                fieldWithPath("description").description("수정할 Todo의 설명"),
+                                fieldWithPath("deadline").description("수정할 Todo의 데드라인"))
+                ));
     }
 
     @Test
@@ -164,8 +204,19 @@ class TodoControllerTest {
 
                 .andExpect(jsonPath("$.id").value(idMessage))
                 .andExpect(jsonPath("$.description").value(descriptionMessage))
-                .andExpect(jsonPath("$.deadline").value(deadlineMessage));
+                .andExpect(jsonPath("$.deadline").value(deadlineMessage))
 
+                .andDo(document("todo-put-valid_failure",
+                    requestFields(
+                            fieldWithPath("id").description("수정할 Todo의 ID"),
+                            fieldWithPath("description").description("수정할 Todo의 설명"),
+                            fieldWithPath("deadline").description("수정할 Todo의 데드라인")),
+                    responseFields(
+                            fieldWithPath("id").description("id의 유효성 메시지"),
+                            fieldWithPath("description").description("description의 유효성 메시지"),
+                            fieldWithPath("deadline").description("deadline의 유효성 메시지")
+                    )
+        ));
     }
 
     @Test
@@ -177,7 +228,13 @@ class TodoControllerTest {
 
         // when, then
         mockMvc.perform(delete("/todo/{id}", id))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent())
+
+                .andDo(document("todo-delete",
+                        pathParameters(
+                            parameterWithName("id").description("삭제할 Todo의 ID")
+                        )
+                ));
 
     }
 
@@ -195,7 +252,16 @@ class TodoControllerTest {
         mockMvc.perform(delete("/todo/{id}", id))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(ErrorCode.NO_SUCH_TODO.getDescription()));
+                .andExpect(jsonPath("$.message").value(ErrorCode.NO_SUCH_TODO.getDescription()))
+
+                .andDo(document("todo-delete-failure",
+                        pathParameters(
+                                parameterWithName("id").description("삭제할 Todo의 Id")
+                        ),
+                        responseFields(
+                                fieldWithPath("message").description("예외 메시지")
+                        )
+                ));
     }
 
     private LocalDateTime createDeadline() {
