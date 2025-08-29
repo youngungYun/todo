@@ -34,9 +34,6 @@ class TodoControllerTest {
     String deadlineMessage = "시간을 입력하세요.";
 
     @Autowired
-    private MessageSource messageSource;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired

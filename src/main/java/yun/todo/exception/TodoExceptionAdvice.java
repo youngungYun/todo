@@ -41,7 +41,7 @@ public class TodoExceptionAdvice {
                         FieldError::getField,
                         FieldError::getDefaultMessage
                 ));
-        log.warn("[Validation Failed] Errors: {}", errors.toString());
+        log.warn("[Validation Failed] Errors: {}", errors);
 
         return errors;
     }

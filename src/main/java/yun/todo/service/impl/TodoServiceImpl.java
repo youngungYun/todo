@@ -1,7 +1,6 @@
 package yun.todo.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import yun.todo.domain.Todo;
