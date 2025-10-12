@@ -2,14 +2,14 @@ spring:
   application:
     name: todo
 
-# Serialization
+  # Serialization
   jackson:
     date-format: yyyy-MM-dd'T'HH:mm
     time-zone: Asia/Seoul
     serialization:
       write-dates-as-timestamps: false
 ---
-# Dev Datebase
+# Dev Database
 spring:
   config:
     activate:
