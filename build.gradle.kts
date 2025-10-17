@@ -49,3 +49,14 @@ tasks.asciidoctor {
     inputs.dir(snippetsDir)
     dependsOn(tasks.test)
 }
+
+tasks.apply {
+    bootJar {
+        // 실행 가능한 JAR 생성 설정
+        enabled = true
+    }
+    jar {
+        // 일반 JAR 파일 생성 비활성화
+        enabled = false
+    }
+}
