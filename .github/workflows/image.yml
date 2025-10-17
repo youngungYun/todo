@@ -28,6 +28,7 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v5.0.0  
         with:
+          distribution: 'temurin'
           java-version: 21
 
       # Gradle로 빌드
