@@ -47,10 +47,30 @@ jobs:
           # Username used to log against the Docker registry
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           # Password or personal access token used to log against the Docker registry
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          password: ${{ secrets.DOCKERHUB_PUSH_PASSWORD }}
   
       # DockerHub Push
       - name: Build and Push Docker image
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend
+          
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      # EC2가 이미지 pull 후 컨테이너 재실행
+      - name: SSH to EC2 and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DUCKERHUB_PASSWORD }}
+            cd todo
+            sudo docker-compose stop
+            sudo docker-compose rm -f
+            sudo docker image rm ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend
+            sudo docker-compose up -d
