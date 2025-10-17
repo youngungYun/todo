@@ -60,14 +60,6 @@ jobs:
     needs: build
 
     steps:
-      - name: Login DockerHub in EC2
-        uses: docker/login-action@v3.6.0
-        with:
-          # Username used to log against the Docker registry
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          # Password or personal access token used to log against the Docker registry
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-    
       # EC2가 이미지 pull 후 컨테이너 재실행
       - name: SSH to EC2 and deploy
         uses: appleboy/ssh-action@master
@@ -76,6 +68,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            
             cd todo
             sudo docker-compose stop
             sudo docker-compose rm -f
