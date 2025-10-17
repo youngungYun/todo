@@ -47,5 +47,5 @@ jobs:
       # DockerHub Push
       - name: Build and Push Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/todo-backend .
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/todo-backend
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/todo-backend
